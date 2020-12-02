@@ -8,15 +8,19 @@ import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Colors
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.drawLayer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.setContent
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.ui.tooling.preview.Preview
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.halilibo.composevideoplayer.MediaPlaybackControls
@@ -40,13 +44,13 @@ import kotlinx.coroutines.launch
 object AnimeUi : GenericUi {
     override fun playUi(activity: ComponentActivity?, list: RowData, title: String) {
         GlobalScope.launch {
-            val items = list.getItem()
-            Loged.fd(items)
             activity?.runOnUiThread {
                 activity.apply {
                     MaterialAlertDialogBuilder(this)
                         .setTitle("Download or Stream?")
                         .setEnumItems(items = ShowOption.values().map { it.name }.toTypedArray()) { s: ShowOption, d ->
+                            val items = list.getItem()
+                            Loged.fd(items)
                             when (s) {
                                 ShowOption.DOWNLOAD -> requestPermissions(
                                     Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -141,7 +145,7 @@ fun PlayVideo(selectedVideoState: String) {
     Box {
         VideoPlayer(
             source = VideoPlayerSource.Network(selectedVideoState),
-            backgroundColor = Color.Transparent,
+            backgroundColor = Color.Transparent
         )
     }
 }

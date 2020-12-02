@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -61,7 +62,7 @@ object MediaControlButtons {
     }
 
     @Composable
-    operator fun invoke(modifier: Modifier = Modifier) {
+    operator fun invoke(modifier: Modifier = Modifier, durationModifier: Modifier = Modifier) {
         val controller = VideoPlayerControllerAmbient.current
 
         val controlsEnabled by controller.collect { controlsEnabled }
@@ -87,27 +88,38 @@ object MediaControlButtons {
         )
 
         if (controlsEnabled && controlsExistOnUITree) {
+
+            /*Box(
+                Modifier
+                    .drawOpacity(appearTransition[alpha])
+                    .background(Color.Black.copy(alpha = appearTransition[alpha] * 0.6f))
+                    .then(modifier)
+            ) {
+                Text("Hello")
+            }*/
+
             Content(
                 modifier = Modifier
                     .drawOpacity(appearTransition[alpha])
                     .background(Color.Black.copy(alpha = appearTransition[alpha] * 0.6f))
-                        + modifier
+                    .then(modifier),
+                Modifier
+                    .drawOpacity(appearTransition[alpha])
+                    .background(Color.Black.copy(alpha = appearTransition[alpha] * 0.6f))
+                    .then(modifier)
+                    .then(durationModifier)
             )
         }
     }
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
+    fun Content(modifier: Modifier = Modifier, durationModifier: Modifier = Modifier) {
         val controller = VideoPlayerControllerAmbient.current
 
         Box(modifier = Modifier + modifier) {
-
-            Box(
-                modifier = Modifier.align(Alignment.Center).fillMaxSize()
-                    .clickable(indication = null) {
-                        controller.hideControls()
-                    })
-            PositionAndDurationNumbers(modifier = Modifier.align(Alignment.BottomCenter))
+            Box(modifier = Modifier.align(Alignment.Center).fillMaxSize()
+                    .clickable(indication = null) { controller.hideControls() })
+            PositionAndDurationNumbers(modifier = Modifier.align(Alignment.BottomCenter).then(durationModifier))
             PlayPauseButton(modifier = Modifier.align(Alignment.Center))
         }
     }
@@ -133,7 +145,8 @@ fun PositionAndDurationNumbers(
                     shadow = Shadow(
                         blurRadius = 8f,
                         offset = Offset(2f, 2f)
-                    )
+                    ),
+                    color = Color.White
                 )
             )
             Box(modifier = Modifier.weight(1f))
@@ -143,7 +156,8 @@ fun PositionAndDurationNumbers(
                     shadow = Shadow(
                         blurRadius = 8f,
                         offset = Offset(2f, 2f)
-                    )
+                    ),
+                    color = Color.White
                 )
             )
         }

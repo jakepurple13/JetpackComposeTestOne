@@ -1,12 +1,13 @@
 package com.halilibo.composevideoplayer
 
 import androidx.compose.*
-import androidx.compose.foundation.AmbientContentColor
+import androidx.compose.animation.animate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.AmbientContentColor
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.savedinstancestate.Saver
@@ -71,6 +72,7 @@ fun VideoPlayer(
             VideoPlayerControllerAmbient provides controller
     ) {
         val videoSize by controller.collect { videoSize }
+        val visible by controller.collect { this.controlsVisible }
 
         Box(modifier = Modifier.fillMaxWidth()
                 .background(color = backgroundColor)
@@ -81,9 +83,11 @@ fun VideoPlayer(
                 controller.playerViewAvailable(it)
             }
 
+            val padding = animate(if(visible) 30.dp else 0.dp)
+
             MediaControlGestures(modifier = Modifier.matchParentSize())
-            MediaControlButtons(modifier = Modifier.matchParentSize())
-            ProgressIndicator(modifier = Modifier.align(Alignment.BottomCenter))
+            MediaControlButtons(modifier = Modifier.matchParentSize(), durationModifier = Modifier.padding(bottom = padding))
+            ProgressIndicator(modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 5.dp).padding(bottom = padding))
         }
     }
 

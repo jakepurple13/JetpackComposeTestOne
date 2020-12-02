@@ -1,5 +1,6 @@
 package com.programmersbox.jetpackcomposetestone
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.ui.tooling.preview.Preview
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.koduok.compose.glideimage.GlideImage
+import com.programmersbox.jetpackcomposetestone.anime.ShowActivity
 import com.programmersbox.jetpackcomposetestone.ui.JetpackComposeTestOneTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -153,14 +155,18 @@ fun Previewing(appState: AppState, info: MutableState<GenericInfo?>) {
         ) {
             DrawerLayout(checked, drawerState) {
                 Row(Modifier.background(MaterialTheme.colors.background).wrapContentSize().padding(it)) {
+                    //val activity = (LifecycleOwnerAmbient.current as? ComponentActivity)
                     fun buttonOnClick(items: List<GenericInfo>, title: String): () -> Unit = {
                         if (items.size == 1) {
-                            //uiViewer(items.first(), title)
                             info.value = items.first()
                             appState.currentScreen = CurrentScreen.LIST
                         } else {
                             showDialog.value = DialogShowing(true, items, title)
                         }
+
+                        /*activity?.startActivity(
+                            Intent(activity, ShowActivity::class.java).apply { putExtra("video_url", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") }
+                        )*/
                     }
                     OutlinedButton(
                         modifier = Modifier
