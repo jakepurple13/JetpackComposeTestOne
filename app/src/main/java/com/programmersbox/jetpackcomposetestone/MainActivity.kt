@@ -1,9 +1,10 @@
 package com.programmersbox.jetpackcomposetestone
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.animate
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumnFor
@@ -19,8 +20,6 @@ import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.*
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawOpacity
@@ -39,7 +38,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.ui.tooling.preview.Preview
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.koduok.compose.glideimage.GlideImage
-import com.programmersbox.jetpackcomposetestone.anime.ShowActivity
 import com.programmersbox.jetpackcomposetestone.ui.JetpackComposeTestOneTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -63,7 +61,7 @@ class MainActivity : AppCompatActivity() {
                     //Previewing()
                     when (appState.currentScreen) {
                         CurrentScreen.HOME -> Previewing(appState, info)
-                        CurrentScreen.LIST -> info.value?.let { uiViewer(info = it, title = "Test", appState = appState, data = data) }
+                        CurrentScreen.LIST -> info.value?.let { uiViewer(info = it, appState = appState, data = data) }
                         CurrentScreen.INFO -> data.value?.let { InfoLayout(it, appState) }
                     }
                 }
@@ -113,7 +111,7 @@ fun PreviewPreview() {
 @Preview(showBackground = true)
 fun UIViewPreview() {
     JetpackComposeTestOneTheme {
-        uiViewer(info = MSources.NINE_ANIME, title = "Test", appState = AppState(), data = mutableStateOf(null))
+        uiViewer(info = MSources.NINE_ANIME, appState = AppState(), data = mutableStateOf(null))
     }
 }
 
@@ -150,6 +148,41 @@ fun Previewing(appState: AppState, info: MutableState<GenericInfo?>) {
             bottomBar = {
                 Row(Modifier.background(MaterialTheme.colors.background).fillMaxWidth().padding(5.dp)) {
                     Text("By Jacob", textAlign = TextAlign.End, style = MaterialTheme.typography.caption)
+                    /*AndroidView(viewBlock = ::DiamondLoader, modifier = Modifier.size(50.dp)) { it.animateTo(100) }
+                    var sliderProgress by remember { mutableStateOf(10f) }
+                    var loaderProgress by remember { mutableStateOf(50f) }
+
+                    val modelListener by remember {
+                        mutableStateOf(DiamondModel(50, null, 10.dp, Color.Red, Color.DarkGray))
+                    }
+
+                    Column(Modifier.padding(horizontal = 5.dp)) {
+
+                        DiamondLoaderCompose(
+                            model = modelListener,
+                            Modifier.size(75.dp).padding(5.dp)
+                        )
+
+                        Slider(value = sliderProgress, onValueChange = {
+                            sliderProgress = it
+                            modelListener.loadingWidth = it.dp
+                        }, valueRange = 1f..100f)
+
+                        Slider(value = loaderProgress, onValueChange = {
+                            loaderProgress = it
+                            modelListener.progress = it.toInt()
+                        }, valueRange = 0f..100f)
+
+                        Row {
+
+                            Button(onClick = {
+                                modelListener.progressColor = Color(Random.nextColor(255))
+                                modelListener.emptyColor = Color(Random.nextColor(255))
+                            }) {
+                                Text("Random Color")
+                            }
+                        }
+                    }*/
                 }
             }
         ) {
@@ -233,15 +266,11 @@ fun SourceDialog(showDialog: MutableState<DialogShowing>) =
 @ExperimentalKeyInput
 @ExperimentalMaterialApi
 @Composable
-fun uiViewer(info: GenericInfo, title: String, appState: AppState, data: MutableState<GenericInformation?>) /*= Window(
-        title = "$title Viewer",
-        centered = true
-) */ {
+fun uiViewer(info: GenericInfo, appState: AppState, data: MutableState<GenericInformation?>) {
     var textValue by mutableStateOf(TextFieldValue(""))
     var page = 1
     var progressAlpha by remember { mutableStateOf(1f) }
-    val currentList = mutableStateListOf<GenericData>()//mutableStateOf<MutableList<com.programmersbox.jetpackcomposetestone.GenericData>>(emptyList<com.programmersbox.jetpackcomposetestone.GenericData>().toMutableList())
-
+    val currentList = mutableStateListOf<GenericData>()
     onActive {
         GlobalScope.launch {
             //delay(1000)
@@ -256,7 +285,8 @@ fun uiViewer(info: GenericInfo, title: String, appState: AppState, data: Mutable
         Scaffold(
             topBar = {
                 Row(Modifier.background(MaterialTheme.colors.background).fillMaxWidth().padding(top = 5.dp)) {
-                    OutlinedTextField(value = textValue,
+                    OutlinedTextField(
+                        value = textValue,
                         onValueChange = { t: TextFieldValue -> textValue = t },
                         trailingIcon = { androidx.compose.material.Icon(Icons.Filled.Search) },
                         label = { Text("${currentList.size} Search") },
@@ -303,20 +333,6 @@ fun uiViewer(info: GenericInfo, title: String, appState: AppState, data: Mutable
                             RowItem(item, appState, data)
                             Divider()
                         }
-
-                        /*VerticalScrollbar(
-                                style = ScrollbarStyleAmbient.current.copy(
-                                        hoverColor = theme.value.onBackground,
-                                        unhoverColor = theme.value.onBackground.copy(alpha = 0.5f),
-                                        hoverDurationMillis = 250
-                                ),
-                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                                adapter = rememberScrollbarAdapter(
-                                        scrollState = listState,
-                                        itemCount = currentList.size,
-                                        averageItemSize = 37.dp
-                                )
-                        )*/
                     }
                 }
             }
@@ -369,48 +385,50 @@ const val HEIGHT_DEFAULT = 480 / 2
 @ExperimentalMaterialApi
 @Composable
 fun InfoLayout(item: GenericInformation, appState: AppState) {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
     var favorite by remember { mutableStateOf(false) }
+    val moreInfo = remember { mutableStateOf(false) }
     JetpackComposeTestOneTheme {
-        Scaffold(
-            topBar = {
-                Row(
-                    Modifier.background(MaterialTheme.colors.background).fillMaxWidth().padding(top = 5.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
+        DrawerLayout(checked) {
+            Scaffold(
+                topBar = {
                     Row(
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .clickable {
-                                favorite = !favorite
-                            }
+                        Modifier.background(MaterialTheme.colors.background).fillMaxWidth().padding(top = 5.dp),
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        Image(
-                            asset = if (favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
-                            modifier = Modifier.padding(5.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                        )
-                        Text(
-                            if (favorite) "Unfavorite" else "Favorite",
-                            modifier = Modifier.padding(5.dp).align(Alignment.CenterVertically),
-                            style = MaterialTheme.typography.button
-                        )
+                        Row(
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .clickable { favorite = !favorite }
+                        ) {
+                            Image(
+                                asset = if (favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
+                                modifier = Modifier.padding(5.dp),
+                                colorFilter = ColorFilter.tint(animate(if(favorite) Color.Red else MaterialTheme.colors.onBackground))
+                            )
+                            Text(
+                                if (favorite) "Unfavorite" else "Favorite",
+                                modifier = Modifier.padding(5.dp).align(Alignment.CenterVertically),
+                                style = MaterialTheme.typography.button
+                            )
+                        }
                     }
-                    Image(
-                        asset = Icons.Outlined.Settings,
-                        modifier = Modifier
-                            .clickable { drawerState.open() }
-                            .align(Alignment.CenterVertically)
-                            .padding(5.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                    )
+                },
+                bottomBar = {
+                    OutlinedButton(
+                        onClick = { moreInfo.value = !moreInfo.value },
+                        border = cardBorder(),
+                        modifier = Modifier.fillMaxWidth().padding(5.dp)
+                    ) { Text("More Info", color = MaterialTheme.colors.onBackground) }
                 }
-            }
-        ) {
-            DrawerLayout(checked, drawerState) {
-                Column(Modifier.background(MaterialTheme.colors.background)) {
-                    TitleArea(item)
-                    ItemRows(item)
+            ) {
+                Column(Modifier.background(MaterialTheme.colors.background).padding(it)) {
+                    TitleArea(
+                        item,
+                        Modifier.animateContentSize(),
+                        moreInfo = moreInfo
+                    )
+                    ItemRows(item, Modifier.weight(animate(target = if (moreInfo.value) 0.0001f else 5f)))
+
                 }
             }
         }
@@ -421,53 +439,59 @@ fun InfoLayout(item: GenericInformation, appState: AppState) {
 }
 
 @Composable
-fun TitleArea(item: GenericInformation) = Card(modifier = Modifier.padding(5.dp), border = cardBorder()) {
-    Row(modifier = Modifier.padding(5.dp)) {
-        GlideImage(
-            model = item.imageUrl as Any,
-            modifier = Modifier
-                .size(WIDTH_DEFAULT.dp, HEIGHT_DEFAULT.dp)
-                .padding(top = 5.dp)
-        ) { transform(RoundedCorners(30)) }
-        Column(modifier = Modifier.padding(5.dp).height(HEIGHT_DEFAULT.dp)) {
-            Text(
-                item.title,
-                style = MaterialTheme
-                    .typography
-                    .h4
-                    .copy(textAlign = TextAlign.Center, fontSize = 20.sp)
-            )
-            Text(
-                item.url,
-                modifier = Modifier.clickable {  },
-                textDecoration = TextDecoration.Underline,
-                style = MaterialTheme
-                    .typography
-                    .caption
-                    .copy(textAlign = TextAlign.Center, color = Color.Cyan)
-            )
-            LazyRowFor(item.genres, modifier = Modifier.padding(5.dp)) {
-                Text(it, modifier = Modifier.padding(5.dp), style = MaterialTheme.typography.subtitle2)
+fun TitleArea(item: GenericInformation, modifier: Modifier = Modifier, moreInfo: MutableState<Boolean>) =
+    Card(modifier = Modifier.padding(5.dp).then(modifier), border = cardBorder()) {
+        Row(modifier = Modifier.padding(5.dp)) {
+            GlideImage(
+                model = item.imageUrl as Any,
+                modifier = Modifier
+                    .size(WIDTH_DEFAULT.dp, HEIGHT_DEFAULT.dp)
+                    .padding(top = 5.dp)
+            ) { transform(RoundedCorners(30)) }
+            Column(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .let { if (moreInfo.value) it.fillMaxHeight() else it.height(HEIGHT_DEFAULT.dp) }
+            ) {
+                Text(
+                    item.title,
+                    style = MaterialTheme
+                        .typography
+                        .h4
+                        .copy(textAlign = TextAlign.Center, fontSize = 20.sp)
+                )
+                Text(
+                    item.url,
+                    modifier = Modifier.clickable { },
+                    textDecoration = TextDecoration.Underline,
+                    style = MaterialTheme
+                        .typography
+                        .caption
+                        .copy(textAlign = TextAlign.Center, color = Color.Cyan)
+                )
+                LazyRowFor(item.genres, modifier = Modifier.padding(5.dp)) {
+                    Text(it, modifier = Modifier.padding(5.dp), style = MaterialTheme.typography.subtitle2)
+                }
+                ScrollableColumn { Text(item.description.orEmpty(), style = MaterialTheme.typography.body1) }
             }
-            ScrollableColumn { Text(item.description.orEmpty(), style = MaterialTheme.typography.body1) }
         }
     }
-}
 
 @ExperimentalFoundationApi
 @ExperimentalMaterialApi
 @Composable
-fun ItemRows(item: GenericInformation) = Box(
-    modifier = Modifier.padding(5.dp),
-    alignment = Alignment.TopCenter
-) {
+fun ItemRows(item: GenericInformation, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val items = item.rowData()
     val activity = (LifecycleOwnerAmbient.current as? ComponentActivity)
-    LazyColumnFor(items, state = listState, modifier = Modifier.fillMaxHeight()) {
+    LazyColumnFor(
+        items,
+        state = listState,
+        modifier = Modifier.padding(5.dp).then(modifier)
+    ) {
         Card(
             modifier = Modifier
-                .padding(5.dp)
+                .padding(vertical = 5.dp)
                 .fillMaxWidth()
                 .clickable { item.playUi(activity, it, it.name) },
             border = cardBorder()
@@ -478,19 +502,6 @@ fun ItemRows(item: GenericInformation) = Box(
             }
         }
     }
-    /*VerticalScrollbar(
-            style = ScrollbarStyleAmbient.current.copy(
-                    hoverColor = theme.value.onBackground,
-                    unhoverColor = theme.value.onBackground.copy(alpha = 0.5f),
-                    hoverDurationMillis = 250
-            ),
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-            adapter = rememberScrollbarAdapter(
-                    scrollState = listState,
-                    itemCount = items.size,
-                    averageItemSize = 37.dp
-            )
-    )*/
 }
 
 @Composable
@@ -507,7 +518,7 @@ fun DrawerLayout(
     drawerContent = {
         ScrollableColumn(
             Modifier.background(MaterialTheme.colors.background).padding(5.dp).fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceEvenly
+            verticalArrangement = Arrangement.spacedBy(5.dp)//SpaceEvenly
         ) {
             ThemeSettingRow(checked)
             Divider()
@@ -544,27 +555,5 @@ fun ThemeSettingRow(checked: MutableState<Boolean>) =
             modifier = Modifier.padding(horizontal = 5.dp).align(Alignment.CenterVertically).weight(1f)
         )
     }
-
-@Composable
-fun <T> LazyGridFor(
-    items: List<T>,
-    rowSize: Int = 1,
-    modifier: Modifier = Modifier,
-    itemContent: @Composable BoxScope.(T) -> Unit,
-) {
-    val rows = items.chunked(rowSize)
-    LazyColumnFor(rows) { row ->
-        Row(Modifier.fillParentMaxWidth()) {
-            for ((index, item) in row.withIndex()) {
-                Box(
-                    Modifier.fillMaxWidth(1f / (rowSize - index)).then(modifier),
-                    alignment = Alignment.TopCenter
-                ) {
-                    itemContent(item)
-                }
-            }
-        }
-    }
-}
 
 //fun imageFromFile(file: File): ImageBitmap = org.jetbrains.skija.Image.makeFromEncoded(file.readBytes()).asImageBitmap()
