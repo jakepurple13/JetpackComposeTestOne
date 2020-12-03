@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -403,7 +404,7 @@ fun InfoLayout(item: GenericInformation, appState: AppState) {
                             Image(
                                 asset = if (favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
                                 modifier = Modifier.padding(5.dp),
-                                colorFilter = ColorFilter.tint(animate(if(favorite) Color.Red else MaterialTheme.colors.onBackground))
+                                colorFilter = ColorFilter.tint(animate(if (favorite) Color.Red else MaterialTheme.colors.onBackground))
                             )
                             Text(
                                 if (favorite) "Unfavorite" else "Favorite",
@@ -469,9 +470,7 @@ fun TitleArea(item: GenericInformation, modifier: Modifier = Modifier, moreInfo:
                         .caption
                         .copy(textAlign = TextAlign.Center, color = Color.Cyan)
                 )
-                LazyRowFor(item.genres, modifier = Modifier.padding(5.dp)) {
-                    Text(it, modifier = Modifier.padding(5.dp), style = MaterialTheme.typography.subtitle2)
-                }
+                LazyRowFor(item.genres, modifier = Modifier.padding(5.dp)) { Chip(modifier = Modifier.padding(5.dp), text = it) }
                 ScrollableColumn { Text(item.description.orEmpty(), style = MaterialTheme.typography.body1) }
             }
         }
@@ -506,6 +505,27 @@ fun ItemRows(item: GenericInformation, modifier: Modifier = Modifier) {
 
 @Composable
 fun cardBorder() = BorderStroke(1.dp, MaterialTheme.colors.onBackground)
+
+@Composable
+fun Chip(modifier: Modifier = Modifier, text: String) {
+    Card(
+        modifier = modifier,
+        border = BorderStroke(color = MaterialTheme.colors.onBackground, width = Dp.Hairline),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            /*Box(
+                modifier = Modifier.preferredSize(16.dp, 16.dp)
+                    .background(color = MaterialTheme.colors.secondary)
+            )
+            Spacer(Modifier.preferredWidth(4.dp))*/
+            Text(text = text, style = MaterialTheme.typography.subtitle2)
+        }
+    }
+}
 
 @Composable
 fun DrawerLayout(
